@@ -39,11 +39,26 @@ int32_t swap_int32( int32_t val )
     val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF ); 
     return (val << 16) | ((val >> 16) & 0xFFFF);
 }
-
-ByteStream::ByteStream(void)
-{
+int ByteStream::is_open(){
+	return fp!=NULL;
 }
 
+void ByteStream::open(char* FilePath){
+	fp=fopen(FilePath, "rb");
+}
+ByteStream::ByteStream(void)
+{
+	
+
+}
+
+void ByteStream::read(void* dst, int size){
+	fread(dst, size,1,fp);
+
+}
+FILE* ByteStream::getfp(){
+	return fp;
+}
 
 ByteStream::~ByteStream(void)
 {
@@ -51,16 +66,22 @@ ByteStream::~ByteStream(void)
 
 	unsigned short ByteStream::getu16(){
 		unsigned short temp;
-		read((char*)&temp, 2);
+		fread((char*)&temp, 2,1,fp);
 		return swap_uint16(temp);
 	}
 	unsigned int ByteStream::getu32(){
 	unsigned int temp;
-	read((char*)&temp, 4);
+	fread((char*)&temp, 4,1,fp);
 	return swap_uint32(temp);
 	}
 	float ByteStream::getfloat(){
 	float temp;
-	read((char*)&temp, 4);
+	fread((char*)&temp, 4,1,fp);
 	return swap_float32(temp);
+	}
+
+	void ByteStream::seekg(int offset){
+		if(fp){
+			fseek(fp, offset, SEEK_SET);
+		}
 	}

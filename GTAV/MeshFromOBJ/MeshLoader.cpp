@@ -314,14 +314,14 @@ HRESULT CMeshLoader::Create( IDirect3DDevice9* pd3dDevice, const WCHAR* strFilen
     // Reorder the vertices according to subset and optimize the mesh for this graphics 
     // card's vertex cache. When rendering the mesh's triangle list the vertices will 
     // cache hit more often so it won't have to re-execute the vertex shader.
-    DWORD* aAdjacency = new DWORD[pMesh->GetNumFaces() * 3];
+   /* DWORD* aAdjacency = new DWORD[pMesh->GetNumFaces() * 3];
     if( aAdjacency == NULL )
         return E_OUTOFMEMORY;
 
     V( pMesh->GenerateAdjacency( 1e-6f, aAdjacency ) );
     V( pMesh->OptimizeInplace( D3DXMESHOPT_ATTRSORT | D3DXMESHOPT_VERTEXCACHE, aAdjacency, NULL, NULL, NULL ) );
 
-    SAFE_DELETE_ARRAY( aAdjacency );
+    SAFE_DELETE_ARRAY( aAdjacency );*/
     m_pMesh = pMesh;
 
     return S_OK;
