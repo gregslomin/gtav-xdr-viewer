@@ -29,7 +29,7 @@
 #define GL_FRAMEWORK__INCLUDED
 
 #include <windows.h>								// Header File For Windows
-
+#include "TextureClass.h"
 typedef struct {									// Structure For Keyboard Stuff
 	BOOL keyDown [256];								// Holds TRUE / FALSE For Each Key
 } Keys;												// Keys
@@ -71,6 +71,7 @@ struct RSC7_Container{
 	uint32  RSC7system_flag;
 	uint32  RSC7graphics_flag;
 	uint32 VTable;
+		classTextures* modelTextures;
 
 	uint32 BlockMapAddress;
 	uint32 ShaderGroup;
@@ -148,7 +149,6 @@ struct geometry
 	uint16 unkn_primitiveType;
 	VB vbo;
 	IB ibo;
-
 };
 
 struct model
@@ -160,6 +160,7 @@ struct model
 	uint32 VectorCollectionOffset;
 	uint32 MaterialCollectionOffset;
 	uint32 GeometryOffsetArray[4];
+
 	geometry geom[4];
 } ;
 typedef struct {									// Contains Information Vital To A Window

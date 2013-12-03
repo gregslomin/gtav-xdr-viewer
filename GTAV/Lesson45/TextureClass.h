@@ -73,6 +73,7 @@ public:
 	vector<unsigned long> hashes;
 	vector<unsigned long> infoOffsets;
 	vector<TextureInfo> TextureInfos;
+	vector<classTextures> ExternalTextures;
 	void ReadExtraTextureData(ByteStream bs, TextureInfoEx* dst){
 		        dst->Unknown1 = bs.getu16();
                 dst->Unknown2 = bs.getu16();
@@ -95,6 +96,7 @@ public:
 
 	}
 	void ReadTextureData(ByteStream bs, TextureInfo* dst){
+		unsigned long cur=ftell(bs.getfp());
 			    dst->VTable = bs.getu32();
                 dst->BlockMapOffset = bs.getu32();
                 dst->Unknown1 = bs.getu32();
@@ -103,8 +105,8 @@ public:
                 dst->Unknown44 = bs.getu32();
                 dst->Unknown5 = bs.getu32();
                 dst->Unknown6 = bs.getu32();
-                
-                dst->NameOffset = bs.getu32()&0xFFFFFFF + 0x10;
+              
+                dst->NameOffset = (bs.getu32()&0xFFFFFF) + 0x10;
              
                 dst->Unknown7= bs.getu32();
                 dst->Unknown8= bs.getu32();
@@ -115,7 +117,7 @@ public:
                 dst->Height = bs.getu16();
                 dst->Unknown12= bs.getu32();
 				ReadExtraTextureData(bs, &dst->xInfo);
-				fseek(bs.getfp(), dst->NameOffset, SEEK_SET);
+				fseek(bs.getfp(), dst->NameOffset , SEEK_SET);
 				dst->name="";
 				while(1){
 					char k=fgetc(bs.getfp());
@@ -126,23 +128,38 @@ public:
 				}
 
 	}
+	void ReadHeader(ByteStream bs, texture_header* hdr){
+		hdr->VTable=bs.getu32();;
+		hdr->BlockMapOffset=bs.getu32();;// Offset to the block map
+		hdr->ParentDictionary=bs.getu32();;
+		hdr-> UsageCount=bs.getu32();;
+		hdr-> HashTableOffset=bs.getu32();; // Offset to the hash table
+		hdr->TextureCount=bs.getu16();;; // Number of textures in this dictionary
+		hdr->TextureCount2=bs.getu16();;; // Repeated texture count
+		hdr->TextureListOffset=bs.getu32();;; // Offset to the texture list
+		hdr->TextureCount3=bs.getu16();;; // Repeated texture count
+		hdr->TextureCount4=bs.getu16();;; // Repeated texture count
+
+	}
 	classTextures(ByteStream bs){
-		fread(&header, 1, sizeof(texture_header),bs.getfp());
-		bs.seekg(header.HashTableOffset&0xFFFFFFF + 0x10);
+	   int address=bs.getu32();
+		bs.seekg((address&0xFFFFFF) + 0x10);
+		ReadHeader(bs, &header);
+		bs.seekg((header.HashTableOffset&0xFFFFFF) + 0x10);
         for (int i = 0; i < header.TextureCount; i++)
 			hashes.push_back(bs.getu32());
 
             // Read our info offsets
 
-		bs.seekg(header.TextureListOffset&0xFFFFFFF + 0x10);
+		bs.seekg((header.TextureListOffset&0xFFFFFF) + 0x10);
         for (int i = 0; i < header.TextureCount; i++){
-			hashes.push_back(bs.getu32());
+			infoOffsets.push_back(bs.getu32());
 		}
             // Read our texture info
             
             for (int i = 0; i < header.TextureCount; i++)
             {
-               bs.seekg(infoOffsets[i]&0xFFFFFFF + 0x10);
+               bs.seekg((infoOffsets[i]&0xFFFFFFF) + 0x10);
 			   TextureInfo ti;
 			   ReadTextureData(bs, &ti);
                TextureInfos.push_back(ti);
