@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include "ByteStream.h"
+#include "DXTDecoder.h"
 using namespace std;
 struct texture_header{
 int VTable;
@@ -19,7 +20,7 @@ short TextureCount4; // Repeated texture count
  
 
 
-             struct TextureInfoEx{
+ struct TextureInfoEx{
              short Unknown1; // 0x0020
              short Unknown2; // 0x0003
              int Unknown3; // 0x00000001
@@ -166,6 +167,17 @@ public:
             }
 
 	}
+	   int getvsize(int Size)
+        {
+            if (Size % 128 != 0)
+                Size += (128 - Size % 128);
+            return Size;
+        }
 
+	void ToImage(ByteStream bs, TextureInfo* targetTexture)
+            {
+				//Write this
+                //return bmp;
+            }
 
 };
