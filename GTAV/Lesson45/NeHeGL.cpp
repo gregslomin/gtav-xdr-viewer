@@ -336,7 +336,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	ZeroMemory (&window, sizeof (GL_Window));							// Make Sure Memory Is Zeroed
 	window.keys					= &keys;								// Window Key Structure
 	window.init.application		= &application;							// Window Application
-	window.init.title			= "Lesson 45: NeHe & Paul Frazee's VBO Tut";	// Window Title
+	window.init.title			= "Reoze and Interdpths XDR viewer";	// Window Title
 	window.init.width			= 640;									// Window Width
 	window.init.height			= 480;									// Window Height
 	window.init.bitsPerPixel	= 16;									// Bits Per Pixel
@@ -344,11 +344,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	ZeroMemory (&keys, sizeof (Keys));									// Zero keys Structure
 
-	// Ask The User If They Want To Start In FullScreen Mode?
-	if (MessageBox (HWND_DESKTOP, "Would You Like To Run In Fullscreen Mode?", "Start FullScreen?", MB_YESNO | MB_ICONQUESTION) == IDNO)
-	{
+	
 		window.init.isFullScreen = FALSE;								// If Not, Run In Windowed Mode
-	}
+	
 
 	// Register A Class For Our Window To Use
 	if (RegisterWindowClass (&application) == FALSE)					// Did Registering A Class Fail?

@@ -13,15 +13,17 @@
 #include "NeHeGL.h"												// Header File For NeHeGL
 #include <fstream>
 #include <iostream>
+
 #include "ByteStream.h"
+
 using namespace std;
-#pragma warning(default: 4995)
+
 geometry global_geom;
 model global_model;
-geometry extract(char *arg)
+geometry extract(char *file)
 {
     geometry ret;
-    if(arg == NULL && 1 == 2)
+    if(file == NULL)
     {
         cout << "Must supply a file to open" << endl;
         return ret;
@@ -29,15 +31,16 @@ geometry extract(char *arg)
     try
     {
         ByteStream in;
-        in.open("p_secret_weapon_02.xdr");
+        in.open(file);
         if(!in.is_open())
         {
-            cout << "Failed to open file" << arg << endl;
+            cout << "Failed to open file" << file << endl;
             return ret;
         }
         RSC7_Container con;
-		in.seekg(0xA4);
-		con.modelTextures= new classTextures(in);
+	
+		//in.seekg(0xA4);
+		//con.modelTextures= new classTextures(in);
         in.seekg(0x50);
         con.modelCollection = in.getu32();
         modelCollection collection;
@@ -70,7 +73,8 @@ geometry extract(char *arg)
 
             for(int j=0; j<4; j++)
             {
-                in.seekg((models[i].GeometryOffsetArray[j]&0xFFFFFFF) + 0x10);
+               if(models[i].GeometryOffsetArray[j]==0) continue;
+				in.seekg((models[i].GeometryOffsetArray[j]&0xFFFFFFF) + 0x10);
                 models[i].geom[j].VTable = in.getu32();
                 models[i].geom[j].null1 = in.getu32();
                 models[i].geom[j].null2 = in.getu32();
@@ -126,20 +130,32 @@ geometry extract(char *arg)
                 {
                     cout << e.what() << endl;
                 }
-
+			
                 in.seekg((vb.dataOffset&0xFFFFFFF) + 0x2010);
                 if(vb.stride == 24)
                 {
                     vb.vbo = (vert28*)new vert24[vb.vertCount];
                     vert24 * v = (vert24*)vb.vbo;
+					 vb.verts_only = new float[vb.vertCount*3];
+					 int index2 = 0;
                     for(int i=0; i<vb.vertCount; i++)
                     {
-                        v[i].x = in.getfloat();
+                        
+                      
+
+
+						v[i].x = in.getfloat();
                         v[i].y = in.getfloat();
                         v[i].z = in.getfloat();
                         v[i].color = in.getu32();
                         v[i].tu = in.getfloat();
                         v[i].tv = in.getfloat();
+						  vb.verts_only[index2++] = v[i].x;
+                       
+                        vb.verts_only[index2++] = v[i].y;
+                        
+                        vb.verts_only[index2++] = v[i].z;
+
                     }
                 }
                 else if(vb.stride == 28)
@@ -272,7 +288,7 @@ int			g_nFPS = 0, g_nFrames = 0;							// FPS and FPS Counter
 DWORD		g_dwLastFPS = 0;									// Last FPS Check Time
 //~TUTORIAL
 
-GL_Window*	g_window;
+GL_Window*	g_window= NULL;
 Keys*		g_keys;
 
 // TUTORIAL
@@ -280,8 +296,8 @@ Keys*		g_keys;
 bool IsExtensionSupported( char* szTargetExtension )
 {
     const unsigned char *pszExtensions = NULL;
-    const unsigned char *pszStart;
-    unsigned char *pszWhere, *pszTerminator;
+    const unsigned char *pszStart= NULL;
+    unsigned char *pszWhere= NULL, *pszTerminator= NULL;
 
     // Extension names should not have spaces
     pszWhere = (unsigned char *) strchr( szTargetExtension, ' ' );
@@ -323,8 +339,29 @@ BOOL Initialize (GL_Window* window, Keys* keys)					// Any GL Init Code & User I
         MessageBox( NULL, "Error Loading Heightmap", "Error", MB_OK );
         return false;
     }
-
-    global_geom = extract("test.xdr");
+	OPENFILENAME ofn ;
+// a another memory buffer to contain the file name
+	char szFile[1024]={0};
+	ZeroMemory( &ofn , sizeof( ofn));
+	ofn.lStructSize = sizeof ( ofn );
+	ofn.hwndOwner = NULL ;
+	ofn.lpstrFile = szFile ;
+	ofn.lpstrFile[0] = '\0';
+	ofn.nMaxFile = sizeof( szFile );
+	ofn.lpstrFilter = "XDR\0*.xdr\0XDR\0*.XDR\0";
+	ofn.nFilterIndex =1;
+	ofn.lpstrFileTitle = NULL ;
+	ofn.nMaxFileTitle = 0 ;
+	ofn.lpstrInitialDir=NULL ;
+	ofn.Flags = OFN_PATHMUSTEXIST|OFN_FILEMUSTEXIST ;
+	GetOpenFileName( &ofn );
+    string f=string(szFile);
+	if(f.find(".xdr")==-1 && f.find(".XDR") == -1){
+		exit(0);
+	}
+      
+    global_geom = extract(szFile);
+	
     // Check For VBOs Supported
 #ifndef NO_VBOS
     g_fVBOSupported = IsExtensionSupported( "GL_ARB_vertex_buffer_object" );
@@ -387,7 +424,8 @@ void Update (DWORD milliseconds)								// Perform Motion Updates Here
 
 void Draw (void)
 {
-    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		// Clear Screen And Depth Buffer
+ 
+	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		// Clear Screen And Depth Buffer
     glLoadIdentity ();											// Reset The Modelview Matrix
 
     // Get FPS
@@ -398,7 +436,7 @@ void Draw (void)
         g_nFrames = 0;											// Reset The FPS Counter
 
         char szTitle[256]={0};									// Build The Title String
-        sprintf( szTitle, "Lesson 45: NeHe & Paul Frazee's VBO Tut - %d Triangles, %d FPS", g_pMesh->m_nVertexCount / 3, g_nFPS );
+        sprintf( szTitle, "Reoze and Interdpths XDR viewer - %d Triangles, %d FPS", g_pMesh->m_nVertexCount / 3, g_nFPS );
         if( g_fVBOSupported )									// Include A Notice About VBOs
             strcat( szTitle, ", Using VBOs" );
         else
@@ -463,23 +501,26 @@ void Draw (void)
 
             //glVertex3f(global_geom.vbo.verts_only[global_geom.ibo.indicies[i]*3], global_geom.vbo.verts_only[global_geom.ibo.indicies[i]*3+1], global_geom.vbo.verts_only[global_geom.ibo.indicies[i]*3+2]);
         }
-    glEnd();
+  
     }
     else
     {
             vert24 *verts = (vert24*)global_model.geom[i].vbo.vbo;
-    for(int j=0; j<global_model.geom[i].indexCount; j++ )
-        {
-            vert24 &vert = verts[global_model.geom[i].ibo.indicies[j]];
-            const unsigned int color = vert.color;
-            glColor3ub((color & 0xFF0000) >> 16, (color & 0xFF00) >> 8, (color & 0xFF));
+			if(verts!=0){
+				for(int j=0; j<global_model.geom[i].indexCount; j++ )
+					{
+						vert24 &vert = verts[global_model.geom[i].ibo.indicies[j]];
+						const unsigned int color = vert.color;
+						glColor3ub((color & 0xFF0000) >> 16, (color & 0xFF00) >> 8, (color & 0xFF));
 
-            glVertex3f(vert.x, vert.y, vert.z);
+						glVertex3f(vert.x, vert.y, vert.z);
 
-            //glVertex3f(global_geom.vbo.verts_only[global_geom.ibo.indicies[i]*3], global_geom.vbo.verts_only[global_geom.ibo.indicies[i]*3+1], global_geom.vbo.verts_only[global_geom.ibo.indicies[i]*3+2]);
-        }
-    glEnd();
+						//glVertex3f(global_geom.vbo.verts_only[global_geom.ibo.indicies[i]*3], global_geom.vbo.verts_only[global_geom.ibo.indicies[i]*3+1], global_geom.vbo.verts_only[global_geom.ibo.indicies[i]*3+2]);
+					}
+			}
+
     }
+			glEnd();
  }
 
     // Disable Pointers

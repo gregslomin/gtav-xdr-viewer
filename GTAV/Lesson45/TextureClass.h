@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 #include "ByteStream.h"
-#include "DXTDecoder.h"
+
 using namespace std;
 struct texture_header{
 int VTable;
